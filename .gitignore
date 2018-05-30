@@ -3,3 +3,4 @@ config/config.ini
 vendor/
 composer.lock
 runTests
+.idea/
