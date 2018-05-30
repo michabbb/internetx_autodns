@@ -1,0 +1,30 @@
+{
+  "name": "macropage-sdk/internetx_autodns",
+  "description": "little sdk for internetx's autodns",
+  "minimum-stability": "dev",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Michael Bladowski",
+      "email": "info@macropage.de"
+    }
+  ],
+  "require": {
+    "php" : "7.*",
+    "guzzlehttp/guzzle": "^6.3",
+    "verdant/xml2array": "dev-master"
+  },
+  "require-dev": {
+    "roave/security-advisories": "dev-master",
+    "phpunit/phpunit": "7.*"
+  },
+  "autoload": {
+    "classmap": ["tests/init.php","autodns.php"]
+  },
+  "config": {
+    "cache-ttl": 0,
+    "platform": {
+      "php": "7.1.14"
+    }
+  }
+}
