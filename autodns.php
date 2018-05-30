@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection HtmlUnknownTag */
 
 namespace macropage_sdk\internetx_autodns;
 
@@ -24,71 +24,6 @@ class autodns {
 	}
 
 	/**
-	 * Insert SimpleXMLElement into SimpleXMLElement
-	 *
-	 * @param SimpleXMLElement $parent
-	 * @param SimpleXMLElement $child
-	 * @param bool             $before
-	 *
-	 * @return bool SimpleXMLElement added
-	 */
-	private static function simplexml_import_simplexml(SimpleXMLElement $parent, SimpleXMLElement $child, $before = false) {
-		// check if there is something to add
-		if ($child[0] === null) {
-			return true;
-		}
-
-		// if it is a list of SimpleXMLElements default to the first one
-		$child = $child[0];
-
-		// insert attribute
-		if ($child->xpath('.') !== [$child]) {
-			$parent[$child->getName()] = (string)$child;
-
-			return true;
-		}
-
-		$xml = $child->asXML();
-
-		// remove the XML declaration on document elements
-		if ($child->xpath('/*') === [$child]) {
-			$pos = strpos($xml, "\n");
-			$xml = substr($xml, $pos + 1);
-		}
-
-		return self::simplexml_import_xml($parent, $xml, $before);
-	}
-
-	/**
-	 * Insert XML into a SimpleXMLElement
-	 *
-	 * @param SimpleXMLElement $parent
-	 * @param string           $xml
-	 * @param bool             $before
-	 *
-	 * @return bool XML string added
-	 */
-	private static function simplexml_import_xml(SimpleXMLElement $parent, $xml, $before = false) {
-		$xml = (string)$xml;
-
-		// check if there is something to add
-		if ($nodata = !strlen($xml) or $parent[0] == null) {
-			return $nodata;
-		}
-
-		// add the XML
-		$node     = dom_import_simplexml($parent);
-		$fragment = $node->ownerDocument->createDocumentFragment();
-		$fragment->appendXML($xml);
-
-		if ($before) {
-			return (bool)$node->parentNode->insertBefore($fragment, $node);
-		}
-
-		return (bool)$node->appendChild($fragment);
-	}
-
-	/**
 	 * @param $zone
 	 * @param $rr_name_existing
 	 * @param $rr_type_existing
@@ -98,7 +33,7 @@ class autodns {
 	 *
 	 * @return array
 	 */
-	public function replaceOrAddZoneRecordRR($zone, $rr_name_existing, $rr_type_existing, $rr_ttl_new, $rr_pref_new, $rr_value_new) {
+	public function replaceOrAddZoneRecordRR($zone, $rr_name_existing, $rr_type_existing, $rr_ttl_new, $rr_pref_new, $rr_value_new): array {
 
 		$zoneInfo = $this->getZone($zone);
 
@@ -151,7 +86,7 @@ class autodns {
 		return $zoneInfo;
 	}
 
-	public function getZone($zone) {
+	public function getZone($zone): array {
 
 		$request = '<?xml version="1.0" encoding="utf-8"?>
 						<request>
@@ -176,12 +111,12 @@ class autodns {
 	 *
 	 * @return array
 	 */
-	private function send_msg($endpoint, $methode = 'GET', $request_body = '', array $extra_headers = []) {
+	private function send_msg($endpoint, $methode = 'GET', $request_body = '', array $extra_headers = []): array {
 		/** @var ClientException $error */
 		$error = null;
 
 		$headers = [];
-		if (count($extra_headers)) {
+		if (\count($extra_headers)) {
 			$headers = array_merge($headers, $extra_headers);
 		}
 
@@ -196,6 +131,7 @@ class autodns {
 		$auth->addChild('context', $this->config['auth']['context']);
 
 		$request_body = $request_xml->asXML();
+		$res = null;
 
 		try {
 			$res = $this->client->request(
@@ -222,15 +158,13 @@ class autodns {
 			$respoonse_headers = [];
 		}
 		unset($client);
-		//echo "Will return....\n";
-
 
 		/** @noinspection NullPointerExceptionInspection */
 		$statusCode = $res !== null ? $res->getStatusCode() : $error->getResponse()->getStatusCode();
 
 		return [
-			'state'       => 200 === (int)$statusCode,
-			'status_code' => (int)$statusCode,
+			'state'       => 200 === $statusCode,
+			'status_code' => $statusCode,
 			'body'        => $body,
 			'body_parsed' => XML2Array::createArray($body),
 			'error'       => [
@@ -243,7 +177,7 @@ class autodns {
 				'uri'              => isset($error) ? $error->getRequest()->getUri() : null,
 				'response_headers' => $respoonse_headers,
 				'request_body'     => $error !== null ? $error->getRequest()->getBody()->getContents() : $request_body,
-				'request_body_raw' => isset($request_body) ? $request_body : null
+				'request_body_raw' => $request_body ?? null
 			]
 		];
 
@@ -252,28 +186,29 @@ class autodns {
 
 	public static function get_array_value($key, $search) {
 		$value = null;
-		if (is_array($search)) {
-			if (self::array_key_exists_r($key, $search)) {
-				$currentHaystack = $search;
-				if (is_array($key)) {
-					foreach ($key as $item) {
-						$currentHaystack = $currentHaystack[$item];
-					}
-				} else {
-					$currentHaystack = $currentHaystack[$key];
+		if (\is_array($search) && self::array_key_exists_r($key, $search)) {
+			$currentHaystack = $search;
+			if (\is_array($key)) {
+				foreach ($key as $item) {
+					$currentHaystack = $currentHaystack[$item];
 				}
-				$value = $currentHaystack;
+			} else {
+				$currentHaystack = $currentHaystack[$key];
 			}
+			$value = $currentHaystack;
 		}
 
 		return $value;
 	}
 
-	public static function array_key_exists_r($key, $haystack) {
+	public static function array_key_exists_r($key, $haystack): bool {
 		$retValue        = true;
 		$currentHaystack = $haystack;
-		if (is_array($haystack)) {
-			if (!is_array($key)) $key = [$key];
+		if (\is_array($haystack)) {
+			/** @noinspection ArrayCastingEquivalentInspection */
+			if (!\is_array($key)) {
+				$key = [$key];
+			}
 			foreach ($key as $needle) {
 				if ($currentHaystack === null) {
 					$retValue = false;
