@@ -30,5 +30,10 @@ class AutoDNSTest extends init  {
 		print_r($AutoDNS->replaceOrAddZoneRecordRR('wreijqfhiwefhioqwefhwe.info','_acme-challenge','TXT',null,null,'ffffffffffffffffff'));
 	}
 
+	public function test_removeZoneRecord() {
+		$AutoDNS = new autodns($this->config);
+		print_r($AutoDNS->removeZoneRecordRR('wreijqfhiwefhioqwefhwe.info','blabla','TXT'));
+	}
+
 }
 

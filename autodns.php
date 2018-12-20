@@ -131,7 +131,7 @@ class autodns {
 		$auth->addChild('context', $this->config['auth']['context']);
 
 		$request_body = $request_xml->asXML();
-		$res = null;
+		$res          = null;
 
 		try {
 			$res = $this->client->request(
@@ -223,6 +223,60 @@ class autodns {
 		}
 
 		return $retValue;
+	}
+
+	/**
+	 * @param $zone
+	 * @param $rr_name_existing
+	 * @param $rr_type_existing
+	 *
+	 * @return array
+	 */
+	public function removeZoneRecordRR($zone, $rr_name_existing, $rr_type_existing): array {
+
+		$zoneInfo = $this->getZone($zone);
+
+		if ($zoneInfo['state'] && self::get_array_value(['body_parsed', 'response', 'result', 'status', 'code'], $zoneInfo) === 'S0205') {
+
+			$zone = $zoneInfo['body_parsed']['response']['result']['data']['zone'];
+			unset($zone['created'], $zone['owner'], $zone['changed'], $zone['updated_by']);
+
+			$found = false;
+			foreach ($zone['rr'] as $i => $r) {
+				if ($r['name'] === $rr_name_existing && $r['type'] === $rr_type_existing) {
+					$found = $i;
+				}
+			}
+
+			if (!$found) {
+				throw new \RuntimeException('unable to find zone record: ' . $rr_name_existing . 'of type ' . $rr_type_existing);
+			}
+
+			$rr_to_remove               = $zone['rr'][$found];
+
+			$tag_default = Array2XML::createXML([
+													'rr_rem' => $rr_to_remove,
+												], ['rootNodeName' => 'default']);
+
+			$tag_zone = Array2XML::createXML([
+												 'name'      => $zone['name'],
+												 'system_ns' => $zone['system_ns']
+											 ], ['rootNodeName' => 'zone']);
+
+			$request = '<?xml version="1.0" encoding="utf-8"?>
+						<request>
+						<task>
+						<code>0202001</code>
+						' . $tag_default->saveXML($tag_default->documentElement) . '
+						' . $tag_zone->saveXML($tag_zone->documentElement) . '
+						</task>
+						</request>';
+
+			return $this->send_msg(self::ENDPOINT, 'POST', $request);
+
+		}
+
+		return $zoneInfo;
 	}
 
 }
