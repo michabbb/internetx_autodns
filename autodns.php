@@ -241,6 +241,10 @@ class autodns {
 			$zone = $zoneInfo['body_parsed']['response']['result']['data']['zone'];
 			unset($zone['created'], $zone['owner'], $zone['changed'], $zone['updated_by']);
 
+			if (array_key_exists('name',$zone['rr'])) {
+				$zone['rr'] = [$zone['rr']];
+			}
+
 			$found = false;
 			foreach ($zone['rr'] as $i => $r) {
 				if ($r['name'] === $rr_name_existing && $r['type'] === $rr_type_existing) {
