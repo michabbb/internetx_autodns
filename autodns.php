@@ -40,23 +40,30 @@ class autodns {
 		if ($zoneInfo['state'] && self::get_array_value(['body_parsed', 'response', 'result', 'status', 'code'], $zoneInfo) === 'S0205') {
 
 			$zone = $zoneInfo['body_parsed']['response']['result']['data']['zone'];
+
 			unset($zone['created'], $zone['owner'], $zone['changed'], $zone['updated_by']);
 
-			$found = false;
-			foreach ($zone['rr'] as $i => $r) {
-				if ($r['name'] === $rr_name_existing && $r['type'] === $rr_type_existing) {
-					$found = true;
-					if ($rr_ttl_new) {
-						$zone['rr'][$i]['ttl'] = $rr_ttl_new;
-					}
-					if ($rr_pref_new) {
-						$zone['rr'][$i]['pref'] = $rr_pref_new;
-					}
-					if ($rr_value_new) {
-						$zone['rr'][$i]['value'] = $rr_value_new;
-					}
-				}
-			}
+            $found = false;
+
+			if (array_key_exists('rr',$zone)) {
+                if (array_key_exists('name', $zone['rr'])) {
+                    $zone['rr'] = [$zone['rr']];
+                }
+                foreach ($zone['rr'] as $i => $r) {
+                    if ($r['name'] === $rr_name_existing && $r['type'] === $rr_type_existing) {
+                        $found = true;
+                        if ($rr_ttl_new) {
+                            $zone['rr'][$i]['ttl'] = $rr_ttl_new;
+                        }
+                        if ($rr_pref_new) {
+                            $zone['rr'][$i]['pref'] = $rr_pref_new;
+                        }
+                        if ($rr_value_new) {
+                            $zone['rr'][$i]['value'] = $rr_value_new;
+                        }
+                    }
+                }
+            }
 
 			if (!$found) {
 				$zone['rr'][] = [
@@ -240,10 +247,6 @@ class autodns {
 
 			$zone = $zoneInfo['body_parsed']['response']['result']['data']['zone'];
 			unset($zone['created'], $zone['owner'], $zone['changed'], $zone['updated_by']);
-
-			if (array_key_exists('name',$zone['rr'])) {
-				$zone['rr'] = [$zone['rr']];
-			}
 
 			$found = false;
 			foreach ($zone['rr'] as $i => $r) {
